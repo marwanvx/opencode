@@ -20,7 +20,9 @@ ultimate source of truth. Upstream test262 files run verbatim from `test/test262
 - [x] Top-level `await` and `return` through the program's implicit async-function scope.
 - [x] Explicit `return`, final top-level expression as a REPL-style result, and `null` when no value is produced.
 - [x] Program results use JSON-like boundaries, with `undefined` and non-finite numbers normalized to `null`. Tool
-      arguments follow JSON serialization semantics before their schema applies (see the tools section).
+      arguments follow JSON serialization semantics before their schema applies (see the tools section). Own
+      `__proto__` keys are dropped wherever a host object crosses to the host, so merging tool inputs or results
+      cannot replace a prototype; `JSON.stringify` still emits the key, like JS, since a string cannot pollute.
 - [x] Live Date, RegExp, Map, Set, URL, and URLSearchParams values inside CodeMode.
 - [x] Tool calls through the host-provided `tools` tree only.
 - [x] The global `search(...)` built-in: synchronous tool discovery that counts as an admitted tool call and is
@@ -100,6 +102,10 @@ ultimate source of truth. Upstream test262 files run verbatim from `test/test262
 - [x] Function declarations, function expressions, and arrow functions.
 - [x] Synchronous and `async` functions.
 - [x] Closures, recursion, default parameters, rest parameters, and destructured parameters.
+- [x] A call depth limit of 10000: deeper nesting throws a catchable `RangeError: Maximum call stack size exceeded`
+      at the overflowing call instead of running until the timeout. Callbacks invoked by built-ins count below the
+      call that invoked the built-in, and a resumed `await` starts from depth 0 as in JS, so long async chains such
+      as recursive pagination are unaffected.
 - [x] Expression and block function bodies.
 - [x] User callbacks for the supported Array, Map, Set, URLSearchParams, sort, string-replacement, and `Array.from`
       mapper APIs, with one shared acceptance rule everywhere including promise reactions.

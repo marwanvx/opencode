@@ -640,8 +640,8 @@ function App(props: { pair?: DialogPairCredentials }) {
   onMount(() => {
     batch(() => {
       if (args.agent) local.agent.set(args.agent)
-      if (args.model) {
-        const { providerID, modelID } = Model.parse(args.model)
+      if (args.model && typeof args.model === "string") {
+        const { providerID, modelID, variant } = Model.parse(args.model)
         if (!providerID || !modelID)
           return toast.show({
             variant: "warning",
@@ -649,6 +649,7 @@ function App(props: { pair?: DialogPairCredentials }) {
             duration: 3000,
           })
         local.model.set({ providerID, modelID }, { recent: true })
+        if (variant) local.model.variant.set(variant)
       }
       if (args.sessionID && !args.fork) {
         route.navigate({
@@ -680,7 +681,7 @@ function App(props: { pair?: DialogPairCredentials }) {
           return
         }
         void client.api.session
-          .fork({ sessionID: match, boundary: { type: "through" } })
+          .fork({ sessionID: match })
           .then((result) => route.navigate({ type: "session", sessionID: result.id, prompt: startupPrompt }))
           .catch(toast.error)
       })
@@ -693,7 +694,7 @@ function App(props: { pair?: DialogPairCredentials }) {
     if (forked || !args.sessionID || !args.fork) return
     forked = true
     void client.api.session
-      .fork({ sessionID: args.sessionID, boundary: { type: "through" } })
+      .fork({ sessionID: args.sessionID })
       .then((result) => route.navigate({ type: "session", sessionID: result.id, prompt: startupPrompt }))
       .catch(toast.error)
   })

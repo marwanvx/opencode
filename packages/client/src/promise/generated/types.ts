@@ -286,7 +286,7 @@ export type McpStatusDisabled = { status: "disabled" }
 
 export type McpStatusFailed = { status: "failed"; error: string }
 
-export type McpStatusNeedsAuth = { status: "needs_auth" }
+export type McpStatusNeedsAuth = { status: "needs_auth"; error: string }
 
 export type McpResource = { server: string; name: string; uri: string; description?: string; mimeType?: string }
 
@@ -421,6 +421,8 @@ export type VcsBranchList = Array<string>
 export type WebSearchProvider = { id: string; name: string }
 
 export type WebSearchResult = { url: string; title?: string; content?: string; time: { published?: number } }
+
+export type McpProtocol = "legacy" | "auto" | "2026-07-28"
 
 export type ConfigWorktree = { directory: string }
 
@@ -1990,6 +1992,7 @@ export type ConfigEntry =
                   disabled?: boolean
                   codemode?: boolean
                   timeout?: { startup?: number; catalog?: number; execution?: number }
+                  protocol?: McpProtocol
                 }
               | {
                   type: "remote"
@@ -2007,6 +2010,7 @@ export type ConfigEntry =
                   disabled?: boolean
                   codemode?: boolean
                   timeout?: { startup?: number; catalog?: number; execution?: number }
+                  protocol?: McpProtocol
                 }
           }
         }
@@ -2509,6 +2513,24 @@ export type IntegrationNotFoundError = {
 }
 export const isIntegrationNotFoundError = (value: unknown): value is IntegrationNotFoundError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "IntegrationNotFoundError"
+
+export type IntegrationAttemptNotFoundError = {
+  readonly _tag: "IntegrationAttemptNotFoundError"
+  readonly integrationID: string
+  readonly attemptID: string
+  readonly message: string
+}
+export const isIntegrationAttemptNotFoundError = (value: unknown): value is IntegrationAttemptNotFoundError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "IntegrationAttemptNotFoundError"
+
+export type IntegrationMethodNotFoundError = {
+  readonly _tag: "IntegrationMethodNotFoundError"
+  readonly integrationID: string
+  readonly methodID: string
+  readonly message: string
+}
+export const isIntegrationMethodNotFoundError = (value: unknown): value is IntegrationMethodNotFoundError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "IntegrationMethodNotFoundError"
 
 export type McpServerNotFoundError = {
   readonly _tag: "McpServerNotFoundError"
@@ -3832,9 +3854,7 @@ export type SessionRemoveOutput = void
 
 export type SessionForkInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
-  readonly boundary: {
-    readonly boundary: { readonly type: "before"; readonly messageID: string } | { readonly type: "through" }
-  }["boundary"]
+  readonly before?: { readonly before?: string | undefined }["before"]
 }
 
 export type SessionForkOutput = { data: SessionInfo }["data"]
@@ -4639,6 +4659,7 @@ export type McpAddInput = {
           readonly disabled?: boolean
           readonly codemode?: boolean
           readonly timeout?: { readonly startup?: number; readonly catalog?: number; readonly execution?: number }
+          readonly protocol?: "legacy" | "auto" | "2026-07-28"
         }
       | {
           readonly type: "remote"
@@ -4656,6 +4677,7 @@ export type McpAddInput = {
           readonly disabled?: boolean
           readonly codemode?: boolean
           readonly timeout?: { readonly startup?: number; readonly catalog?: number; readonly execution?: number }
+          readonly protocol?: "legacy" | "auto" | "2026-07-28"
         }
   }["config"]
 }
@@ -4691,23 +4713,16 @@ export type McpResourceCatalogOutput = { location: LocationPublicRef; data: McpR
 
 export type CredentialUpdateInput = {
   readonly credentialID: { readonly credentialID: string }["credentialID"]
-  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
   readonly label: { readonly label: string }["label"]
 }
 
 export type CredentialUpdateOutput = void
 
-export type CredentialActivateInput = {
-  readonly credentialID: { readonly credentialID: string }["credentialID"]
-  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
-}
+export type CredentialActivateInput = { readonly credentialID: { readonly credentialID: string }["credentialID"] }
 
 export type CredentialActivateOutput = void
 
-export type CredentialRemoveInput = {
-  readonly credentialID: { readonly credentialID: string }["credentialID"]
-  readonly location?: { readonly location?: { readonly directory?: string | undefined } | undefined }["location"]
-}
+export type CredentialRemoveInput = { readonly credentialID: { readonly credentialID: string }["credentialID"] }
 
 export type CredentialRemoveOutput = void
 
