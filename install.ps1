@@ -30,7 +30,7 @@ Write-Host "==> Downloading $zipUrl..." -ForegroundColor Gray
 $downloaded = $false
 $curlExe = Get-Command "curl.exe" -ErrorAction SilentlyContinue
 if ($curlExe) {
-    & $curlExe.Source -fsSL "$zipUrl" -o "$tempZip"
+    & $curlExe.Source -fsSL --retry 5 --retry-delay 2 --retry-connrefused "$zipUrl" -o "$tempZip"
     if ($LASTEXITCODE -eq 0 -and (Test-Path $tempZip)) {
         $downloaded = $true
     }

@@ -52,7 +52,10 @@ TMP_DIR="$(mktemp -d)"
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
-curl -fsSL "$DOWNLOAD_URL" | tar -xz -C "$TMP_DIR"
+echo "==> Downloading $TARBALL..."
+curl --fail --location --retry 5 --retry-delay 2 --retry-connrefused -sSL "$DOWNLOAD_URL" -o "$TMP_DIR/$TARBALL"
+
+tar -xzf "$TMP_DIR/$TARBALL" -C "$TMP_DIR"
 
 # Atomic binary replacement on same filesystem avoids ETXTBSY if opencode is running
 mv "$TMP_DIR/opencode" "$INSTALL_DIR/opencode.new"
