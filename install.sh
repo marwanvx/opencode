@@ -5,6 +5,12 @@ REPO="marwanvx/opencode"
 VERSION="v2.0.3-patch.1"
 INSTALL_DIR="${OPENCODE_INSTALL_DIR:-$HOME/.opencode/bin}"
 
+# If executed on Windows (Git Bash, MSYS, Cygwin), delegate to PowerShell installer
+if [ "${OS:-}" = "Windows_NT" ]; then
+  powershell -c "irm https://raw.githubusercontent.com/$REPO/v2-patched/install.ps1 | iex"
+  exit $?
+fi
+
 # 1. Detect OS
 RAW_OS="$(uname -s)"
 case "$RAW_OS" in
