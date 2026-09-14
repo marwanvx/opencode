@@ -23,11 +23,20 @@ ultimate source of truth. Upstream test262 files run verbatim from `test/test262
       arguments follow JSON serialization semantics before their schema applies (see the tools section). Own
       `__proto__` keys are dropped wherever a host object crosses to the host, so merging tool inputs or results
       cannot replace a prototype; `JSON.stringify` still emits the key, like JS, since a string cannot pollute.
+- [x] Values `JSON.stringify` would flatten to `{}` cross the host boundary in a useful form instead: a Set as an
+      array, a RegExp as `"/source/flags"`, a URLSearchParams as its query string. A Map still crosses as `{}`.
+      Functions, generators, promises, and extension handles are rejected with a hint. In-program `JSON.stringify`
+      keeps JS behavior for all of these.
 - [x] Live Date, RegExp, Map, Set, URL, and URLSearchParams values inside CodeMode.
 - [x] Tool calls through the host-provided `tools` tree only.
 - [x] The global `search(...)` built-in: synchronous tool discovery that counts as an admitted tool call and is
       shadowable by program declarations like other globals.
 - [x] Cooperative timeout, an optional total tool-call limit, output bounding, and unrestricted tool-call concurrency.
+- [x] The timeout fires between interpreter steps, so one built-in is bounded in what it may build: strings up to
+      2^24 characters (`repeat`, `pad*`, `concat`, `join`, `+`, template literals, `JSON.stringify`), arrays up to
+      10,000,000 elements (`Array(n)`, `length =`, `Array.from`, `split`, `matchAll`, `concat`, `flat`; below the JS
+      maximum of 2^32 - 1), and 10,000 pending promises at once. Exceeding one throws a `RangeError`. A single regular
+      expression match can still run long on a pathological pattern; the host regex engine has no interrupt hook.
 - [ ] Strict-mode early errors: duplicate parameter names, `yield` as an identifier, and a trailing comma after a
       rest parameter are accepted unless the program itself begins with `"use strict"`.
 - [ ] Valid JavaScript rejected by TypeScript transpilation before interpretation, such as `in` inside a destructuring
@@ -422,6 +431,32 @@ ultimate source of truth. Upstream test262 files run verbatim from `test/test262
 - [x] `crypto.randomUUID()`.
 - [ ] `crypto.getRandomValues` and `crypto.subtle`, `TextEncoder`/`TextDecoder`, and `Blob`: these need a binary
       value type, which the JSON-like data model does not have yet.
+
+## Extensions
+
+Host classes and functions a host opts in through `Extension.make({ name, globals })` and `CodeMode.make({ extensions })`.
+Nothing is exposed unless a host provides it; extension calls are not tool calls.
+
+- [x] Each global is a class or a function, exposed as-is: constructors with `new`, prototype methods, accessors,
+      and statics (including through an exposed subclass, so `new this()` works), plus inheritance
+      up to the nearest exposed ancestor. A global that shadows a built-in or another extension throws at `make`.
+- [x] Instances of exposed classes stay on the host; the program holds a handle whose only members are the class's.
+      The same host instance is always the same handle within a run, so identity and `instanceof` hold. Handles
+      cannot cross the data boundary: returning, stringifying, throwing, or passing one to a tool fails.
+- [x] Every value crossing in either direction is converted, never shared: plain objects and arrays are copied,
+      `Date`, `RegExp`, `URL`, `URLSearchParams`, `Map`, and `Set` become fresh copies with their contents converted,
+      errors cross as errors with their name and message, and a `__proto__` key is dropped. Functions, generators,
+      un-awaited promises, and symbols cannot be passed in; an instance of an unexposed class, a symbol, or a BigInt
+      cannot come out.
+- [x] A host `Promise` becomes a program promise. Whatever host code returns, resolves, throws, or rejects with
+      crosses the same way, so `catch (e)` receives a copy of the thrown value (an `Error` of the matching type, or
+      plain data). A getter must be synchronous.
+- [x] A prototype member runs only with a handle of its own class as `this`; a detached call, a plain object, or a
+      handle of another class throws `TypeError: Illegal invocation`. Program edits to an exposed prototype affect
+      that run only. Data properties on a class or prototype are not exposed, since a program write would change the
+      host class itself; expose one through an accessor.
+- [ ] Program functions as arguments to extension code (callbacks such as `forEach`).
+- [ ] Binary values (`Uint8Array`, `ArrayBuffer`) at the extension boundary; needs the binary value type above.
 
 ## Errors and diagnostics
 

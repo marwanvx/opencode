@@ -389,8 +389,8 @@ export function createData(config: CreateDataInput) {
     message.update(item.sessionID, (draft, index) => {
       const row =
         item.type === "user"
-          ? { id: item.id, type: "user" as const, ...item.payload, time: { created: item.timeCreated } }
-          : { id: item.id, type: "synthetic" as const, ...item.payload, time: { created: item.timeCreated } }
+          ? { id: item.id, type: "user" as const, ...item.payload, time: { created: item.time.created } }
+          : { id: item.id, type: "synthetic" as const, ...item.payload, time: { created: item.time.created } }
       const position = index.get(item.id)
       if (position === undefined) return message.append(draft, index, row)
       draft[position] = row
@@ -671,7 +671,7 @@ export function createData(config: CreateDataInput) {
         })
         refresh(() =>
           api()
-            .session.message({ sessionID: event.data.sessionID, messageID: messageIDFromEvent(event.id) })
+            .session.message.get({ sessionID: event.data.sessionID, messageID: messageIDFromEvent(event.id) })
             .then((item) => {
               message.update(event.data.sessionID, (draft, index) => {
                 const position = index.get(item.id)
@@ -772,7 +772,7 @@ export function createData(config: CreateDataInput) {
         admitLocal({
           id: event.data.inboxID,
           sessionID: event.data.sessionID,
-          timeCreated: event.created,
+          time: { created: event.created },
           ...event.data.item,
         })
         if (event.data.item.type === "compaction") {
@@ -1187,10 +1187,13 @@ export function createData(config: CreateDataInput) {
     if (!event.location) return
     const location = event.location
     switch (event.type) {
-      case "catalog.updated":
-        result.location.model.invalidate(location)
+      case "provider.updated":
         result.location.provider.invalidate(location)
-        refresh(() => Promise.all([result.location.model.sync(location), result.location.provider.sync(location)]))
+        refresh(() => result.location.provider.sync(location))
+        break
+      case "model.updated":
+        result.location.model.invalidate(location)
+        refresh(() => result.location.model.sync(location))
         break
       case "agent.updated":
         result.location.agent.invalidate(location)
@@ -1466,7 +1469,7 @@ export function createData(config: CreateDataInput) {
           admitLocal({
             id,
             sessionID: input.sessionID,
-            timeCreated: Date.now(),
+            time: { created: Date.now() },
             type: "compaction",
             delivery: "steer",
             payload: {},
@@ -1517,7 +1520,7 @@ export function createData(config: CreateDataInput) {
           admitLocal({
             id,
             sessionID: request.sessionID,
-            timeCreated: Date.now(),
+            time: { created: Date.now() },
             type: "user",
             delivery: request.delivery ?? "steer",
             // Files and skills stay off the optimistic row: their durable

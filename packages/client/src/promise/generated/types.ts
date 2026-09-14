@@ -529,7 +529,7 @@ export type SessionProviderContext = { version: 1; provenance: SessionProviderCo
 export type SessionInboxSynthetic = {
   id: string
   sessionID: string
-  timeCreated: number
+  time: { created: number }
   type: "synthetic"
   payload: SessionInboxSyntheticPayload
   delivery: SessionInboxDelivery
@@ -538,7 +538,7 @@ export type SessionInboxSynthetic = {
 export type SessionInboxCompaction = {
   id: string
   sessionID: string
-  timeCreated: number
+  time: { created: number }
   type: "compaction"
   payload: SessionInboxCompactionPayload
   delivery: SessionInboxDelivery
@@ -851,11 +851,20 @@ export type IntegrationUpdated = {
   data: {}
 }
 
-export type CatalogUpdated = {
+export type ProviderUpdated = {
   id: string
   created: number
   metadata?: { [x: string]: any }
-  type: "catalog.updated"
+  type: "provider.updated"
+  location?: LocationRef
+  data: {}
+}
+
+export type ModelUpdated = {
+  id: string
+  created: number
+  metadata?: { [x: string]: any }
+  type: "model.updated"
   location?: LocationRef
   data: {}
 }
@@ -1620,7 +1629,7 @@ export type VcsInfo = { branch: VcsBranch }
 export type SessionInboxMove = {
   id: string
   sessionID: string
-  timeCreated: number
+  time: { created: number }
   type: "move"
   delivery: SessionInboxDelivery
   payload: SessionInboxMovePayload
@@ -2098,7 +2107,7 @@ export type ConfigEntry =
 export type SessionInboxUser = {
   id: string
   sessionID: string
-  timeCreated: number
+  time: { created: number }
   type: "user"
   payload: SessionInboxUserPayload
   delivery: SessionInboxDelivery
@@ -2298,7 +2307,8 @@ export type V2Event =
   | CredentialUpdated
   | CredentialSwitched
   | IntegrationUpdated
-  | CatalogUpdated
+  | ProviderUpdated
+  | ModelUpdated
   | AgentUpdated
   | SessionCreated
   | SessionAgentSelected
@@ -4066,8 +4076,8 @@ export type SessionPromptOutput = { data: SessionInboxUser }["data"]
 
 export type SessionCommandInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
-  readonly command: {
-    readonly command: string
+  readonly name: {
+    readonly name: string
     readonly text: string
     readonly files?: ReadonlyArray<{
       readonly uri: string
@@ -4084,9 +4094,9 @@ export type SessionCommandInput = {
       readonly mention?: { readonly start: number; readonly end: number; readonly text: string }
     }>
     readonly delivery?: ("steer" | "queue") | null
-  }["command"]
+  }["name"]
   readonly text: {
-    readonly command: string
+    readonly name: string
     readonly text: string
     readonly files?: ReadonlyArray<{
       readonly uri: string
@@ -4105,7 +4115,7 @@ export type SessionCommandInput = {
     readonly delivery?: ("steer" | "queue") | null
   }["text"]
   readonly files?: {
-    readonly command: string
+    readonly name: string
     readonly text: string
     readonly files?: ReadonlyArray<{
       readonly uri: string
@@ -4124,7 +4134,7 @@ export type SessionCommandInput = {
     readonly delivery?: ("steer" | "queue") | null
   }["files"]
   readonly agents?: {
-    readonly command: string
+    readonly name: string
     readonly text: string
     readonly files?: ReadonlyArray<{
       readonly uri: string
@@ -4143,7 +4153,7 @@ export type SessionCommandInput = {
     readonly delivery?: ("steer" | "queue") | null
   }["agents"]
   readonly skills?: {
-    readonly command: string
+    readonly name: string
     readonly text: string
     readonly files?: ReadonlyArray<{
       readonly uri: string
@@ -4162,7 +4172,7 @@ export type SessionCommandInput = {
     readonly delivery?: ("steer" | "queue") | null
   }["skills"]
   readonly delivery?: {
-    readonly command: string
+    readonly name: string
     readonly text: string
     readonly files?: ReadonlyArray<{
       readonly uri: string
@@ -4186,21 +4196,8 @@ export type SessionCommandOutput = void
 
 export type SessionSkillInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
-  readonly id?: {
-    readonly id?: string | undefined
-    readonly skill: string
-    readonly resume?: boolean | undefined
-  }["id"]
-  readonly skill: {
-    readonly id?: string | undefined
-    readonly skill: string
-    readonly resume?: boolean | undefined
-  }["skill"]
-  readonly resume?: {
-    readonly id?: string | undefined
-    readonly skill: string
-    readonly resume?: boolean | undefined
-  }["resume"]
+  readonly id: { readonly id: string; readonly resume?: boolean | undefined }["id"]
+  readonly resume?: { readonly id: string; readonly resume?: boolean | undefined }["resume"]
 }
 
 export type SessionSkillOutput = void
@@ -4384,7 +4381,7 @@ export type SessionLogOutput = SessionLogItem
 
 export type SessionInterruptInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
-  readonly continue?: { readonly continue?: boolean | undefined }["continue"]
+  readonly resume?: { readonly resume?: boolean | undefined }["resume"]
 }
 
 export type SessionInterruptOutput = SessionInterruptResponse
@@ -4393,12 +4390,12 @@ export type SessionBackgroundInput = { readonly sessionID: { readonly sessionID:
 
 export type SessionBackgroundOutput = void
 
-export type SessionMessageInput = {
+export type SessionMessageGetInput = {
   readonly sessionID: { readonly sessionID: string; readonly messageID: string }["sessionID"]
   readonly messageID: { readonly sessionID: string; readonly messageID: string }["messageID"]
 }
 
-export type SessionMessageOutput = { data: SessionMessageInfo }["data"]
+export type SessionMessageGetOutput = { data: SessionMessageInfo }["data"]
 
 export type SessionEnvironmentInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]

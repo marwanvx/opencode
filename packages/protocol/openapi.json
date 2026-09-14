@@ -1064,10 +1064,10 @@
         "summary": "Get session statistics"
       }
     },
-    "/api/session/import": {
+    "/api/experimental/session/import": {
       "post": {
         "tags": ["session"],
-        "operationId": "session.import",
+        "operationId": "experimental.session.import",
         "parameters": [],
         "security": [],
         "responses": {
@@ -1166,10 +1166,10 @@
         }
       }
     },
-    "/api/session/{sessionID}/export": {
+    "/api/experimental/session/{sessionID}/export": {
       "get": {
         "tags": ["session"],
-        "operationId": "session.export",
+        "operationId": "experimental.session.export",
         "parameters": [
           {
             "name": "sessionID",
@@ -1435,6 +1435,83 @@
         },
         "description": "Delete a session and its child sessions.",
         "summary": "Delete session"
+      },
+      "patch": {
+        "tags": ["session"],
+        "operationId": "session.rename",
+        "parameters": [
+          {
+            "name": "sessionID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^ses"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SessionNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundErrorEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundErrorEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Update the session title.",
+        "summary": "Rename session",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  }
+                },
+                "required": ["title"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        }
       }
     },
     "/api/session/{sessionID}/fork": {
@@ -1705,85 +1782,6 @@
         }
       }
     },
-    "/api/session/{sessionID}/rename": {
-      "post": {
-        "tags": ["session"],
-        "operationId": "session.rename",
-        "parameters": [
-          {
-            "name": "sessionID",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^ses"
-            },
-            "required": true
-          }
-        ],
-        "security": [],
-        "responses": {
-          "204": {
-            "description": "<No Content>"
-          },
-          "400": {
-            "description": "InvalidRequestError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UnauthorizedError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SessionNotFoundError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/SessionNotFoundErrorEncoded"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SessionNotFoundErrorEncoded"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "description": "Update the session title.",
-        "summary": "Rename session",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "title": {
-                    "type": "string"
-                  }
-                },
-                "required": ["title"],
-                "additionalProperties": false
-              }
-            }
-          },
-          "required": true
-        }
-      }
-    },
     "/api/session/{sessionID}/move": {
       "post": {
         "tags": ["session"],
@@ -1842,7 +1840,7 @@
             }
           }
         },
-        "description": "Move a session to another project directory, optionally transferring local changes.",
+        "description": "Move a session to another project directory at the requested delivery boundary.",
         "summary": "Move session",
         "requestBody": {
           "content": {
@@ -2114,7 +2112,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "command": {
+                  "name": {
                     "type": "string"
                   },
                   "text": {
@@ -2149,7 +2147,7 @@
                     ]
                   }
                 },
-                "required": ["command", "text"],
+                "required": ["name", "text"],
                 "additionalProperties": false
               }
             }
@@ -2158,10 +2156,10 @@
         }
       }
     },
-    "/api/session/{sessionID}/skill": {
+    "/api/experimental/session/{sessionID}/skill": {
       "post": {
         "tags": ["session"],
-        "operationId": "session.skill",
+        "operationId": "experimental.session.skill",
         "parameters": [
           {
             "name": "sessionID",
@@ -2228,17 +2226,6 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "pattern": "^msg_"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "skill": {
                     "type": "string"
                   },
                   "resume": {
@@ -2252,7 +2239,7 @@
                     ]
                   }
                 },
-                "required": ["skill"],
+                "required": ["id"],
                 "additionalProperties": false
               }
             }
@@ -2478,7 +2465,7 @@
                     "anyOf": [
                       {
                         "type": "string",
-                        "pattern": "^evt_"
+                        "pattern": "^msg_"
                       },
                       {
                         "type": "null"
@@ -2618,10 +2605,10 @@
         }
       }
     },
-    "/api/session/{sessionID}/wait": {
+    "/api/experimental/session/{sessionID}/wait": {
       "post": {
         "tags": ["session"],
-        "operationId": "session.wait",
+        "operationId": "experimental.session.wait",
         "parameters": [
           {
             "name": "sessionID",
@@ -2817,8 +2804,8 @@
         }
       }
     },
-    "/api/session/{sessionID}/revert/clear": {
-      "post": {
+    "/api/session/{sessionID}/revert": {
+      "delete": {
         "tags": ["session"],
         "operationId": "session.revert.clear",
         "parameters": [
@@ -3491,10 +3478,10 @@
         "summary": "Queue steered item"
       }
     },
-    "/api/session/{sessionID}/instructions/entries": {
+    "/api/experimental/session/{sessionID}/instructions/entries": {
       "get": {
         "tags": ["session"],
-        "operationId": "session.instructions.entry.list",
+        "operationId": "experimental.session.instructions.entry.list",
         "parameters": [
           {
             "name": "sessionID",
@@ -3570,10 +3557,10 @@
         "summary": "List instruction entries"
       }
     },
-    "/api/session/{sessionID}/instructions/entries/{key}": {
+    "/api/experimental/session/{sessionID}/instructions/entries/{key}": {
       "put": {
         "tags": ["session"],
-        "operationId": "session.instructions.entry.put",
+        "operationId": "experimental.session.instructions.entry.put",
         "parameters": [
           {
             "name": "sessionID",
@@ -3666,7 +3653,7 @@
       },
       "delete": {
         "tags": ["session"],
-        "operationId": "session.instructions.entry.remove",
+        "operationId": "experimental.session.instructions.entry.remove",
         "parameters": [
           {
             "name": "sessionID",
@@ -4018,7 +4005,7 @@
             "required": true
           },
           {
-            "name": "continue",
+            "name": "resume",
             "in": "query",
             "schema": {
               "anyOf": [
@@ -4084,7 +4071,7 @@
             }
           }
         },
-        "description": "Interrupt active execution owned by this OpenCode process. Returns interrupted=true when an active execution was interrupted and false for the idle no-op. When continue=true, execution resumes pending steering input and next-in-line control items (manual compaction, moves) while queued prompts remain parked.",
+        "description": "Interrupt active execution owned by this OpenCode process. Returns interrupted=true when an active execution was interrupted and false for the idle no-op. When resume=true, execution resumes pending steering input and next-in-line control items (manual compaction, moves) while queued prompts remain parked.",
         "summary": "Interrupt session execution"
       }
     },
@@ -4153,7 +4140,7 @@
     "/api/session/{sessionID}/message/{messageID}": {
       "get": {
         "tags": ["session"],
-        "operationId": "session.message",
+        "operationId": "session.message.get",
         "parameters": [
           {
             "name": "sessionID",
@@ -4235,10 +4222,10 @@
         "summary": "Get session message"
       }
     },
-    "/api/session/{sessionID}/environment": {
+    "/api/experimental/session/{sessionID}/environment": {
       "put": {
         "tags": ["session"],
-        "operationId": "session.environment",
+        "operationId": "experimental.session.environment",
         "parameters": [
           {
             "name": "sessionID",
@@ -4370,8 +4357,7 @@
                 "type": "object",
                 "properties": {
                   "idle": {
-                    "type": "integer",
-                    "minimum": 0
+                    "type": "number"
                   }
                 },
                 "required": ["idle"],
@@ -4386,7 +4372,7 @@
     "/api/session/{sessionID}/message": {
       "get": {
         "tags": ["session"],
-        "operationId": "message.list",
+        "operationId": "session.message.list",
         "parameters": [
           {
             "name": "sessionID",
@@ -15302,6 +15288,9 @@
               }
             },
             "additionalProperties": false
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/Mcp.Protocol"
           }
         },
         "required": ["type", "command"],
@@ -15329,6 +15318,11 @@
           }
         },
         "additionalProperties": false
+      },
+      "Mcp.Protocol": {
+        "type": "string",
+        "enum": ["legacy", "auto", "2026-07-28"],
+        "description": "MCP protocol negotiation. \"legacy\" (default) opens with the initialize handshake and speaks protocol revisions up to 2025-11-25. \"auto\" probes for the 2026-07-28 revision and falls back to legacy when the server does not support it. \"2026-07-28\" requires that revision and fails otherwise."
       },
       "Mcp.RemoteConfigEncoded": {
         "type": "object",
@@ -15380,6 +15374,9 @@
               }
             },
             "additionalProperties": false
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/Mcp.Protocol"
           }
         },
         "required": ["type", "url"],
@@ -15522,9 +15519,12 @@
           "status": {
             "type": "string",
             "enum": ["needs_auth"]
+          },
+          "error": {
+            "type": "string"
           }
         },
-        "required": ["status"],
+        "required": ["status", "error"],
         "additionalProperties": false
       },
       "Mcp.Status.Pending": {
@@ -17006,8 +17006,15 @@
             "type": "string",
             "pattern": "^ses"
           },
-          "timeCreated": {
-            "type": "number"
+          "time": {
+            "type": "object",
+            "properties": {
+              "created": {
+                "type": "number"
+              }
+            },
+            "required": ["created"],
+            "additionalProperties": false
           },
           "type": {
             "type": "string",
@@ -17020,7 +17027,7 @@
             "$ref": "#/components/schemas/Session.Inbox.Delivery"
           }
         },
-        "required": ["id", "sessionID", "timeCreated", "type", "payload", "delivery"],
+        "required": ["id", "sessionID", "time", "type", "payload", "delivery"],
         "additionalProperties": false
       },
       "Session.Inbox.CompactionPayload": {
@@ -17064,8 +17071,15 @@
             "type": "string",
             "pattern": "^ses"
           },
-          "timeCreated": {
-            "type": "number"
+          "time": {
+            "type": "object",
+            "properties": {
+              "created": {
+                "type": "number"
+              }
+            },
+            "required": ["created"],
+            "additionalProperties": false
           },
           "type": {
             "type": "string",
@@ -17078,7 +17092,7 @@
             "$ref": "#/components/schemas/Session.Inbox.MovePayload"
           }
         },
-        "required": ["id", "sessionID", "timeCreated", "type", "delivery", "payload"],
+        "required": ["id", "sessionID", "time", "type", "delivery", "payload"],
         "additionalProperties": false
       },
       "Session.Inbox.MovePayload": {
@@ -17108,8 +17122,15 @@
             "type": "string",
             "pattern": "^ses"
           },
-          "timeCreated": {
-            "type": "number"
+          "time": {
+            "type": "object",
+            "properties": {
+              "created": {
+                "type": "number"
+              }
+            },
+            "required": ["created"],
+            "additionalProperties": false
           },
           "type": {
             "type": "string",
@@ -17122,7 +17143,7 @@
             "$ref": "#/components/schemas/Session.Inbox.Delivery"
           }
         },
-        "required": ["id", "sessionID", "timeCreated", "type", "payload", "delivery"],
+        "required": ["id", "sessionID", "time", "type", "payload", "delivery"],
         "additionalProperties": false
       },
       "Session.Inbox.SyntheticPayload": {
@@ -17152,8 +17173,15 @@
             "type": "string",
             "pattern": "^ses"
           },
-          "timeCreated": {
-            "type": "number"
+          "time": {
+            "type": "object",
+            "properties": {
+              "created": {
+                "type": "number"
+              }
+            },
+            "required": ["created"],
+            "additionalProperties": false
           },
           "type": {
             "type": "string",
@@ -17166,7 +17194,7 @@
             "$ref": "#/components/schemas/Session.Inbox.Delivery"
           }
         },
-        "required": ["id", "sessionID", "timeCreated", "type", "payload", "delivery"],
+        "required": ["id", "sessionID", "time", "type", "payload", "delivery"],
         "additionalProperties": false
       },
       "Session.Inbox.UserPayload": {

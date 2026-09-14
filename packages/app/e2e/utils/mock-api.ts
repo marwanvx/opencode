@@ -233,7 +233,7 @@ const Group = HttpApiGroup.make("mock")
     }),
   )
   .add(
-    HttpApiEndpoint.post("sessionRename", "/api/session/:sessionID/rename", {
+    HttpApiEndpoint.patch("sessionRename", "/api/session/:sessionID", {
       params: SessionParams,
       payload: JsonPayload,
       success: NoContent,
@@ -254,7 +254,7 @@ const Group = HttpApiGroup.make("mock")
     }),
   )
   .add(
-    HttpApiEndpoint.post("sessionRevertClear", "/api/session/:sessionID/revert/clear", {
+    HttpApiEndpoint.delete("sessionRevertClear", "/api/session/:sessionID/revert", {
       params: SessionParams,
       success: NoContent,
     }),
