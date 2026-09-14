@@ -185,6 +185,20 @@ EOF
 install_legacy_shim
 echo -e "${GREEN}✔${NC} Configured legacy shim ${MUTED}(opencode2 -> opencode)${NC}"
 
+# Symlink to ~/.local/bin if available for immediate PATH access
+if [ -d "$HOME/.local/bin" ] && [ -w "$HOME/.local/bin" ]; then
+    ln -sf "$INSTALL_DIR/opencode" "$HOME/.local/bin/opencode"
+    ln -sf "$INSTALL_DIR/opencode2" "$HOME/.local/bin/opencode2" 2>/dev/null || true
+fi
+
+# Clean up any conflicting global npm package so it never shadows the patched binary
+if command -v npm >/dev/null 2>&1; then
+    if npm list -g @opencode/cli >/dev/null 2>&1; then
+        echo -e "${MUTED}Removing conflicting global npm @opencode/cli package...${NC}"
+        npm uninstall -g @opencode/cli >/dev/null 2>&1 || true
+    fi
+fi
+
 # 6. Shell PATH Configuration
 add_to_path() {
     local config_file="$1"

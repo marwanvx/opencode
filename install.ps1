@@ -89,6 +89,14 @@ Remove-Item $tempExtract -Recurse -Force -ErrorAction SilentlyContinue
 Write-Host "✔ Installed binary to $installDir\opencode.exe" -ForegroundColor Green
 Write-Host "✔ Configured legacy shim (opencode2 -> opencode)" -ForegroundColor Green
 
+# Clean up any conflicting global npm package so it doesn't shadow the executable
+$npmCmd = Get-Command "npm.cmd" -ErrorAction SilentlyContinue
+if ($npmCmd) {
+    try {
+        & $npmCmd.Source uninstall -g @opencode/cli 2>$null | Out-Null
+    } catch {}
+}
+
 # Update User PATH permanently if not already added
 $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
 $pathParts = if ($userPath) { $userPath -split ';' } else { @() }
