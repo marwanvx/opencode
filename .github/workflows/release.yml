@@ -76,6 +76,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ inputs.tag_name || github.ref_name }}"
-          gh release create "$TAG" release-assets/* \
-            --title "OpenCode $TAG (Patched Edition)" \
-            --generate-notes
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" release-assets/* --clobber
+          else
+            gh release create "$TAG" release-assets/* \
+              --title "OpenCode $TAG (Patched Edition)" \
+              --generate-notes
+          fi
