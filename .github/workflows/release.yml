@@ -1,0 +1,77 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag or version for release (e.g. v2.0.3-marwan)'
+        required: false
+        default: 'v2.0.3-marwan'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun & Node
+        uses: ./.github/actions/setup-bun
+        with:
+          bun-version: 1.4.2
+
+      - name: Build Web App & CLI Binaries for All Platforms
+        run: bun packages/cli/script/build.ts --skip-install
+        env:
+          OPENCODE_CHANNEL: release
+
+      - name: Package Release Archives
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          
+          # Linux x64
+          if [ -d packages/cli/dist/cli-linux-x64/bin ]; then
+            tar -czvf release-assets/opencode-linux-x64.tar.gz -C packages/cli/dist/cli-linux-x64/bin opencode
+          fi
+          
+          # Linux ARM64
+          if [ -d packages/cli/dist/cli-linux-arm64/bin ]; then
+            tar -czvf release-assets/opencode-linux-arm64.tar.gz -C packages/cli/dist/cli-linux-arm64/bin opencode
+          fi
+          
+          # macOS Apple Silicon (arm64)
+          if [ -d packages/cli/dist/cli-darwin-arm64/bin ]; then
+            tar -czvf release-assets/opencode-darwin-arm64.tar.gz -C packages/cli/dist/cli-darwin-arm64/bin opencode
+          fi
+          
+          # macOS Intel (x64)
+          if [ -d packages/cli/dist/cli-darwin-x64/bin ]; then
+            tar -czvf release-assets/opencode-darwin-x64.tar.gz -C packages/cli/dist/cli-darwin-x64/bin opencode
+          fi
+          
+          # Windows x64 (.exe)
+          if [ -d packages/cli/dist/cli-windows-x64/bin ]; then
+            (cd packages/cli/dist/cli-windows-x64/bin && zip -r "$GITHUB_WORKSPACE/release-assets/opencode-windows-x64.zip" opencode.exe)
+          fi
+          
+          echo "Generated release assets:"
+          ls -lh release-assets
+
+      - name: Upload Binaries to GitHub Release
+        uses: softprops/action-gh-release@c95fe1489396fe8a9ec8745821705571405e3b5e # v2.2.1
+        with:
+          files: release-assets/*
+          tag_name: ${{ inputs.tag_name || github.ref_name }}
+          name: OpenCode ${{ inputs.tag_name || github.ref_name }} (Patched Edition)
+          generate_release_notes: true
