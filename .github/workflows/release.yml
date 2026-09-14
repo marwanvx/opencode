@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Tag or version for release (e.g. v2.0.3-patch.1)'
+        description: 'Tag or version for release (e.g. v2.0.4-patch.1)'
         required: false
-        default: 'v2.0.3-patch.1'
+        default: 'v2.0.4-patch.1'
         type: string
 
 permissions:
@@ -32,12 +32,11 @@ jobs:
           install-flags: --os=* --cpu=*
 
       - name: Build Web App & CLI Binaries for All Platforms
-        run: bun packages/cli/script/build.ts --skip-install
-        env:
-          OPENCODE_CHANNEL: latest
-          OPENCODE_VERSION: 2.0.3-patch.1
-          OPENCODE_RELEASE: "true"
-
+        shell: bash
+        run: |
+          TAG="${{ inputs.tag_name || github.ref_name }}"
+          VERSION="${TAG#v}"
+          OPENCODE_CHANNEL=latest OPENCODE_VERSION="$VERSION" OPENCODE_RELEASE="true" bun packages/cli/script/build.ts --skip-install
       - name: Package Release Archives
         shell: bash
         run: |

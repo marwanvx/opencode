@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
 $repo = "marwanvx/opencode"
-$version = "v2.0.3-patch.1"
+$version = "v2.0.4-patch.1"
 $installDir = Join-Path $HOME ".opencode\bin"
 
 Write-Host ""

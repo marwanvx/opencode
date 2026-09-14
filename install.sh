@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO="marwanvx/opencode"
-DEFAULT_VERSION="v2.0.3-patch.1"
+DEFAULT_VERSION="v2.0.4-patch.1"
 APP="opencode"
 
 # TTY color configuration
