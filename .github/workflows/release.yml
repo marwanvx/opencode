@@ -69,9 +69,10 @@ jobs:
           ls -lh release-assets
 
       - name: Upload Binaries to GitHub Release
-        uses: softprops/action-gh-release@c95fe1489396fe8a9ec8745821705571405e3b5e # v2.2.1
-        with:
-          files: release-assets/*
-          tag_name: ${{ inputs.tag_name || github.ref_name }}
-          name: OpenCode ${{ inputs.tag_name || github.ref_name }} (Patched Edition)
-          generate_release_notes: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ inputs.tag_name || github.ref_name }}"
+          gh release create "$TAG" release-assets/* \
+            --title "OpenCode $TAG (Patched Edition)" \
+            --generate-notes
